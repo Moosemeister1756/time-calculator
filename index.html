@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Time Calc">
+<title>Time Calculator</title>
+<style>
+:root{--bg:#0a0e1a;--card:#1a2235;--yellow:#f4c542;--blue:#5b8af5;--txt:#f8f9fa;--sub:#9ba5b7;--muted:#5a6277;--border:#2a3447}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;padding:24px 20px 48px}
+.container{max-width:440px;margin:0 auto}
+header{text-align:center;margin-bottom:40px}
+h1{font-size:2.2rem;font-weight:300;font-style:italic;background:linear-gradient(135deg,var(--yellow),#ffd966);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px}
+.sub{font-size:.9rem;color:var(--sub)}
+.section{margin-bottom:24px}
+.slabel{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:12px;padding-left:4px}
+.card{background:var(--card);border-radius:22px;padding:28px 24px;border:1px solid var(--border)}
+.row{display:flex;gap:12px;margin-bottom:16px}
+.row:last-of-type{margin-bottom:0}
+.field{flex:1}
+label{display:block;font-size:.78rem;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.wrap{display:flex;align-items:center;background:#151b2e;border:2px solid var(--border);border-radius:14px;padding:4px;transition:all .25s}
+.wrap:focus-within{border-color:var(--yellow);box-shadow:0 0 0 4px rgba(244,197,66,.1)}
+.wrap.blue:focus-within{border-color:var(--blue);box-shadow:0 0 0 4px rgba(91,138,245,.1)}
+input[type=time],input[type=number]{flex:1;background:transparent;border:none;color:var(--txt);font-size:1.3rem;font-weight:500;padding:12px 16px;outline:none;font-family:inherit;-webkit-appearance:none}
+input[type=time]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.5;cursor:pointer}
+.unit{padding:12px 16px 12px 0;color:var(--muted);font-size:.9rem;font-weight:600}
+.result{border-radius:16px;padding:20px 22px;display:flex;align-items:center;gap:16px;margin-top:16px;transition:opacity .3s}
+.result.yellow{background:linear-gradient(135deg,var(--yellow),#ffd966);box-shadow:0 8px 32px rgba(244,197,66,.25)}
+.result.blue{background:linear-gradient(135deg,var(--blue),#7aa3f8);box-shadow:0 8px 32px rgba(91,138,245,.25)}
+.result.hidden{opacity:0;pointer-events:none}
+.ricon{font-size:1.8rem;flex-shrink:0}
+.rlbl{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(10,14,26,.55)}
+.rval{font-size:2rem;font-weight:600;color:#0a0e1a;line-height:1.1;margin:2px 0 3px}
+.rdesc{font-size:.82rem;color:rgba(10,14,26,.55);font-weight:500}
+</style>
+</head>
+<body>
+<div class="container">
+  <header><h1>Time Calculator</h1><p class="sub">Two handy time tools in one</p></header>
+  <div class="section">
+    <div class="slabel">⏱ Minutes Between Two Times</div>
+    <div class="card">
+      <div class="row">
+        <div class="field"><label for="f">From</label><div class="wrap"><input type="time" id="f"></div></div>
+        <div class="field"><label for="t">To</label><div class="wrap"><input type="time" id="t"></div></div>
+      </div>
+      <div class="result yellow hidden" id="dr">
+        <div class="ricon">⏱</div>
+        <div><div class="rlbl">Duration</div><div class="rval" id="dv"></div><div class="rdesc" id="dd"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="slabel">🎯 Count Back From a Time</div>
+    <div class="card">
+      <div class="row">
+        <div class="field"><label for="e">Event time</label><div class="wrap blue"><input type="time" id="e"></div></div>
+        <div class="field"><label for="m">Minutes before</label><div class="wrap blue"><input type="number" id="m" min="1" max="1440" placeholder="30"><span class="unit">min</span></div></div>
+      </div>
+      <div class="result blue hidden" id="sr">
+        <div class="ricon">🎯</div>
+        <div><div class="rlbl">Start at</div><div class="rval" id="sv"></div><div class="rdesc" id="sd"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function fmt(h,m){var p=h>=12?'PM':'AM',hh=h%12||12;return hh+':'+String(m).padStart(2,'0')+' '+p}
+function pt(v){if(!v)return null;var s=v.split(':').map(Number);return s[0]*60+s[1]}
+function hm(n){var h=Math.floor(n/60),m=n%60;return h&&m?h+'h '+m+'m':h?h+' hour'+(h>1?'s':''):m+' min'+(m!==1?'s':'')}
+var f=document.getElementById('f'),t=document.getElementById('t'),dr=document.getElementById('dr'),dv=document.getElementById('dv'),dd=document.getElementById('dd');
+function cd(){var a=pt(f.value),b=pt(t.value);if(a===null||b===null){dr.classList.add('hidden');return}var d=b-a;if(d<0)d+=1440;var fh=f.value.split(':').map(Number),th=t.value.split(':').map(Number);dv.textContent=hm(d);dd.textContent=fmt(fh[0],fh[1])+' → '+fmt(th[0],th[1])+(b<a?' (next day)':'');dr.classList.remove('hidden')}
+f.addEventListener('change',cd);t.addEventListener('change',cd);
+var e=document.getElementById('e'),m=document.getElementById('m'),sr=document.getElementById('sr'),sv=document.getElementById('sv'),sd=document.getElementById('sd');
+function cs(){var ev=pt(e.value),mn=parseInt(m.value);if(ev===null||!mn||mn<1){sr.classList.add('hidden');return}var s=ev-mn;if(s<0)s+=1440;var sh=Math.floor(s/60),sm=s%60,eh=e.value.split(':').map(Number);sv.textContent=fmt(sh,sm);sd.textContent=hm(mn)+' before '+fmt(eh[0],eh[1]);sr.classList.remove('hidden')}
+e.addEventListener('change',cs);m.addEventListener('input',cs);
+var now=new Date(),pad=function(n){return String(n).padStart(2,'0')};
+f.value=pad(now.getHours())+':'+pad(now.getMinutes());
+var later=new Date(now.getTime()+90*60000);
+t.value=pad(later.getHours())+':'+pad(later.getMinutes());
+e.value=pad(later.getHours())+':'+pad(later.getMinutes());
+m.value=30;cd();cs();
+</script>
+</body>
+</html>
